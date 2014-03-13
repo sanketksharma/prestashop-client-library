@@ -27,7 +27,7 @@
 */
 // Here we define constants /!\ You need to replace this parameters
 define('DEBUG', false);											// Debug mode
-define('PS_SHOP_PATH', 'http://localhost/prestashop/');		// Root path of your PrestaShop store
+define('PS_SHOP_PATH', 'www.myshop.com');		// Root path of your PrestaShop store
 define('PS_WS_AUTH_KEY', $_GET['Akey']);	// Auth key (Get it in your Back Office)
 require_once('PSWebServiceLibrary.php');
 		try
@@ -48,7 +48,7 @@ require_once('PSWebServiceLibrary.php');
 			}
 			else
 			{
-				echo "Key is not provided.";
+				die("Key is not provided.");
 			}
 		}
 		catch (PrestaShopWebserviceException $e)
