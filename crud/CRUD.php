@@ -1,14 +1,12 @@
 <?php
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Description of CRUD
  *
- * @author axelor
+ * This file is used for performing crud (create,retrieve,update,delete) for prestashop from java platform.
+ * This file is accessed by action.php file.
+ * 
+ * 
+ * @author Sanket
  */
 
 class CRUD {
