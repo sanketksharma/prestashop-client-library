@@ -166,7 +166,7 @@ class CRUD {
     }
 
     protected function sendXml($data) {
-        $result = new SimpleXMLElement("<customer/>");
+        $result = new SimpleXMLElement("<".$data->getName()."/>");
         foreach ($data as $key => $val) {
             $track = $result->addChild($key, $val);
         }
