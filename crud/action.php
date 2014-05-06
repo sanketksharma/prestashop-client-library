@@ -40,7 +40,7 @@ if(isset($_GET['resource']))
         
         case 'DELETE':
             if(isset($_GET['id']))
-                $crud->delete($_GET['id']);
+                $crud->update($_GET['id']);
             break;    
             
         case 'GETALLID':
