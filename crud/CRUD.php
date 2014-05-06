@@ -1,14 +1,10 @@
 <?php
 /**
  * Description of CRUD
- *
- * This file is used for performing crud (create,retrieve,update,delete) for prestashop from java platform.
- * This file is accessed by action.php file.
- * 
- * 
- * @author Sanket
+ * This file is used to deal with PrestashopWebServiceLibrary.php.
+ * This file will perform all CRUD operation for all resources of prestashop
+ * @author Sanket Sharma
  */
-
 class CRUD {
     //put your code here
 
@@ -20,7 +16,7 @@ class CRUD {
 
     /** @var InputStream Contains the requested xml */
     protected $erpXml;
-    
+
     /** @var String contains value either create or update */
     protected $operation;
 
@@ -36,7 +32,7 @@ class CRUD {
             $this->erpXml = simplexml_load_file("php://input");
             $this->operation = "create";
             $xmlschema = $this->psWebService->get(array('url' => PS_SHOP_PATH . '/api/' . $this->opt['resource'] . '?schema=blank'));
-            $resXml = $this->xmlOperation($xmlschema);	
+            $resXml = $this->xmlOperation($xmlschema);
             //$opttions = array('resource' => $_GET['resource']);
 
             $this->opt['postXml'] = $resXml->asXML();
@@ -76,10 +72,9 @@ class CRUD {
     }
 
     public function update($id) {
-        
         $this->operation = "update";
         $this->opt['id'] = $id;
-        $xmlForUpdate = $this->psWebService->get($this->opt);              
+        $xmlForUpdate = $this->psWebService->get($this->opt);
         try {
             $this->erpXml = simplexml_load_file("php://input");
             $resxml = $this->xmlOperation($xmlForUpdate);
@@ -118,10 +113,11 @@ class CRUD {
     }
 
     public function getAllId() {
-        try {                                                                   
-            $xml = $this->psWebService->get($this->opt);           
-            // Here we get the elements from children of customer markup which is children of prestashop root markup	
-            $resources = $xml->children()->children();           
+        try {
+            $xml = $this->psWebService->get($this->opt);
+
+            // Here we get the elements from children of customer markup which is children of prestashop root markup
+            $resources = $xml->children()->children();
             foreach ($resources as $resource) {
                 echo $resource->attributes() . "\n";
             }
@@ -139,32 +135,84 @@ class CRUD {
 
     protected function xmlOperation($xml) {
         $resources = $xml->children()->children();
-        foreach ($resources as $nodeKey => $node) {            
+        foreach ($resources as $nodeKey => $node) {
             if ($this->operation === "update")
                 $resources->id = intval($this->opt['id']);
             foreach ($this->erpXml as $chNodeKey => $chNode) {
+
                 if ($nodeKey === $chNodeKey) {
                     $resources->$nodeKey = $chNode;
                 }
-            }           
+            }
         }
         return $xml;
     }
 
     protected function updateXml($xml) {
-        $resources = $xml->children()->children();
-
-        foreach ($resources as $nodeKey => $node) {
+        $str = "";
+        $resource = $xml->children()->children();
+        foreach ($resource as $nodeKey => $node) {
             foreach ($this->erpXml as $chNodeKey => $chNode) {
                 if ($nodeKey === $chNodeKey) {
-                    $this->erpXml->$chNodeKey = $node;
+                    if (!$node->language)
+                        $this->erpXml->$chNodeKey = $node;
+                    else
+                        $this->erpXml->$chNodeKey = $node->language;
                 }
-            }           
+            }
+        }
+        if ($this->erpXml->associations) {
+            $str1 = $resource->associations;
+            $str = 'count:' . $resource->associations->children()->children()->count() . ';';
+            $str .= self::getAssociations($str1, '');
+            $this->erpXml->associations = $str . '/associations';
         }
     }
 
+    protected function getAssociations($node, $ans1) {
+        foreach ($node as $s => $str1) {            
+            if ($str1->children()) {
+                // echo 'in child';
+                if ($str1->children()->children()) {
+                    $ans1 .= self::getAssociations($str1->children(), '');
+                } else {
+                    foreach ($str1 as $m => $n)
+                        $ans1 .= $n . ';;;'; // $m . ':' . $n . '|';
+                        //echo $ans1;
+                    $ans1 .= ':::';
+                }
+            }
+        }
+        return $ans1;
+//        $a = '';
+//        foreach ($node as $key => $val) {
+//            if ($val->children())
+//                foreach ($val as $k => $v)
+//                    if ($v->children())
+//                        foreach ($v as $s => $d)
+//                            if ($d->children()) {
+//                                // $a .= $d->getName();
+//                                foreach ($d as $m => $n)
+//                                    $a .= $m . ':' . $n . '|';
+//                                $a .= '<>';
+//                            }
+//        }
+//        return $a;
+    }
+
+//    protected function updateXml($xml) {
+//        $resources = $xml->children()->children();
+//        foreach ($resources as $nodeKey => $node) {
+//            foreach ($this->erpXml as $chNodeKey => $chNode) {
+//                if ($nodeKey === $chNodeKey) {
+//                    $this->erpXml->$chNodeKey = $node;
+//                }
+//            }
+//        }
+//    }
+
     protected function sendXml($data) {
-        $result = new SimpleXMLElement("<".$data->getName()."/>");
+        $result = new SimpleXMLElement("<" . $data->getName() . "/>");
         foreach ($data as $key => $val) {
             $track = $result->addChild($key, $val);
         }
@@ -174,7 +222,15 @@ class CRUD {
 
     protected function writeXml($resources) {
         foreach ($resources as $child => $value) {
-            echo $child . ": " . $value . "\n";
+            if ($child == 'associations') {
+                //$str1 = "";
+                //$str1 = $resource->associations;
+                $str .= self::getAssociations($value, '');
+                //$child = $str;
+                echo $child . ": " . $str . "\n";
+            } else {
+                echo $child . ": " . $value . "\n";
+            }
         }
     }
 
